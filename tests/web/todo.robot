@@ -9,7 +9,7 @@ Test Tags         web    smoke
 Ajouter Deux Tâches
     Ajouter Une Tâche    Préparer la recette
     Ajouter Une Tâche    Lancer la campagne
-    Get Element Count    .todo-list li    ==    3
+    Get Element Count    .todo-list li    ==    2
 
 *** Keywords ***
 Ajouter Une Tâche
