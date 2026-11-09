@@ -1,0 +1,52 @@
+name: Tests Robot Framework
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # bouton "Run workflow" pour lancer à la main
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer les dépendances
+        run: |
+          pip install -r requirements.txt
+          rfbrowser init chromium
+
+      - name: Lancer les tests
+        run: >
+          robot --variablefile env/dev.py
+          --exclude wip
+          --outputdir results
+          --xunit xunit.xml
+          tests/
+
+      - name: Publier le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-robot
+          path: results/
+
+      - name: Résumé dans la page du build
+        if: always()
+        run: |
+          python -c "
+          from robot.api import ExecutionResult
+          s = ExecutionResult('results/output.xml').statistics.total
+          print(f'## Résultats Robot\n\n| Réussis | Échoués | Ignorés |\n|---|---|---|\n| {s.passed} | {s.failed} | {s.skipped} |')
+          " >> "$GITHUB_STEP_SUMMARY"
