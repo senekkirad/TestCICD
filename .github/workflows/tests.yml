@@ -4,12 +4,16 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:        # bouton "Run workflow" pour lancer à la main
+  schedule:
+    - cron: "0 2 * * 1-5"
+  workflow_dispatch:
 
 jobs:
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      API_PASSWORD: ${{ secrets.API_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,27 +31,24 @@ jobs:
           pip install -r requirements.txt
           rfbrowser init chromium
 
-#      - name: Lancer les tests
-#        run: >
-#          robot --variablefile env/dev.py
-#          --exclude wip
-#          --outputdir results
-#          --xunit xunit.xml
-#          tests/
+      - name: Choisir les tests selon le déclencheur
+        if: github.event_name == 'pull_request'
+        run: echo "TAG_OPTION=--include smoke" >> "$GITHUB_ENV"
 
       - name: Lancer les tests
         id: run
         continue-on-error: true
         run: >
           pabot --processes 4 --testlevelsplit
-          --variablefile env/recette.py --exclude wip
+          --variablefile env/demo.py
+          $TAG_OPTION --exclude wip
           --outputdir results tests/
 
       - name: Relancer les échecs
         if: steps.run.outcome == 'failure'
         run: |
           robot --rerunfailed results/output.xml --output rerun.xml \
-            --variablefile env/recette.py --outputdir results tests/ || true
+            --variablefile env/demo.py --outputdir results tests/ || true
           rebot --merge --outputdir results --output output.xml \
             results/output.xml results/rerun.xml
 
