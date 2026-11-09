@@ -1,0 +1,6 @@
+datasources:2389128b3cbbb36815350f2ab6c439b031e7693f
+commandlineoptions:92f4d6b6e08fb4d815f8fc0c897e63dfd26cc8c1
+suitesfrom:no-suites-from-option
+file:3e29bda9fd4c3ed14567b8456b61a337471ce987
+--test Tests.Api.Booking.Cycle De Vie D Une Réservation
+--test Tests.Web.Todo.Ajouter Deux Tâches
