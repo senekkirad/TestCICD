@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "0 2 * * 1-5"
+    - cron: "17 2 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -67,3 +67,29 @@ jobs:
           s = ExecutionResult('results/output.xml').statistics.total
           print(f'## Résultats Robot\n\n| Réussis | Échoués | Ignorés |\n|---|---|---|\n| {s.passed} | {s.failed} | {s.skipped} |')
           " >> "$GITHUB_STEP_SUMMARY"
+
+  publier-rapport:
+    needs: tests
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: rapport-robot
+          path: site
+
+      - name: Faire du rapport la page d'accueil
+        run: cp site/report.html site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
